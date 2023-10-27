@@ -1,7 +1,7 @@
 import urllib.parse
 import requests
+from requests.exceptions import RequestException
 
-# API details
 MAIN_API = "https://www.mapquestapi.com/directions/v2/route?"
 KEY = "NyjRA8irpWWldyZAKvqnnHncR7osQg9r"
 
@@ -15,13 +15,17 @@ def get_directions():
         if dest in ("quit", "q"):
             break
 
-        # Construct the API request URL
-        url = construct_url(orig, dest)
-        print("URL: " + url)
+        try:
+            url = construct_url(orig, dest)
+            print("URL: " + url)
+            json_data = fetch_data(url)
 
-        # Fetch and process the data
-        json_data = fetch_data(url)
-        process_data(json_data, orig, dest)
+            if json_data:
+                process_data(json_data, orig, dest)
+        except (RequestException, ConnectionError):
+            print("An error occurred. Please check your internet connection.")
+        except Exception as e:
+            print("An unexpected error occurred:", str(e))
 
 def construct_url(orig, dest):
     params = {
@@ -32,17 +36,12 @@ def construct_url(orig, dest):
     return MAIN_API + urllib.parse.urlencode(params)
 
 def fetch_data(url):
-    try:
-        json_data = requests.get(url).json()
-        return json_data
-    except requests.RequestException as e:
-        print("An error occurred while fetching data:", e)
-        return None
+    response = requests.get(url)
+    response.raise_for_status()
+
+    return response.json()
 
 def process_data(json_data, orig, dest):
-    if not json_data:
-        return
-
     json_status = json_data.get("info", {}).get("statuscode")
 
     if json_status == 0:
