@@ -17,7 +17,7 @@ def get_directions():
 
         try:
             url = construct_url(orig, dest)
-            print("URL: " + url)
+            print("\nFetching directions...")
             json_data = fetch_data(url)
 
             if json_data:
@@ -38,35 +38,27 @@ def construct_url(orig, dest):
 def fetch_data(url):
     response = requests.get(url)
     response.raise_for_status()
-
     return response.json()
 
 def process_data(json_data, orig, dest):
     json_status = json_data.get("info", {}).get("statuscode")
 
     if json_status == 0:
-        print("API Status: " + str(json_status) + " = A successful route call.")
-        print("=============================================")
-        print("Directions from " + orig + " to " + dest)
-        print("Trip Duration:   " + json_data["route"]["formattedTime"])
-        print("=============================================")
-        print("Directions:")
-        for maneuver in json_data["route"]["legs"][0]["maneuvers"]:
-            print(f"{maneuver['narrative']} ({'%.2f' % (maneuver['distance'] * 1.61)} km)")
-        print("=============================================\n")
+        print("\n" + "=" * 50)
+        print(f"Directions from {orig} to {dest}")
+        print("=" * 50)
+        directions = json_data["route"]["legs"][0]["maneuvers"]
+        for i, maneuver in enumerate(directions, start=1):
+            print(f"{i}. {maneuver['narrative']} ({'%.2f' % (maneuver['distance'] * 1.61)} km)")
+        print("=" * 50)
     elif json_status == 402:
-        print("**********************************************")
-        print("Status Code: " + str(json_status) + "; Invalid user inputs for one or both locations.")
-        print("**********************************************\n")
+        print("\nStatus Code: " + str(json_status) + "; Invalid user inputs for one or both locations.")
     elif json_status == 611:
-        print("**********************************************")
-        print("Status Code: " + str(json_status) + "; Missing an entry for one or both locations.")
-        print("**********************************************\n")
+        print("\nStatus Code: " + str(json_status) + "; Missing an entry for one or both locations.")
     else:
-        print("************************************************************************")
-        print("For Status Code: " + str(json_status) + "; Refer to:")
+        print("\nFor Status Code: " + str(json_status) + "; Refer to:")
         print("https://developer.mapquest.com/documentation/directions-api/status-codes")
-        print("************************************************************************\n")
 
 if __name__ == "__main__":
+    print("Welcome to the MapQuest Directions App!")
     get_directions()
